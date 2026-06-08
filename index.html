@@ -1,1 +1,691 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoreBank — DeFi Lending</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0a0b0f;--surface:#13141a;--surface2:#1a1c25;--surface3:#21232e;
+  --border:#2a2d3d;--border2:#343748;
+  --blue:#4f8ef7;--blue-dim:rgba(79,142,247,0.12);
+  --green:#22c55e;--green-dim:rgba(34,197,94,0.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,0.12);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.12);
+  --purple:#a78bfa;
+  --text:#f1f2f6;--text2:#9397ad;--text3:#5a5e77;
+  --r:10px;--rl:14px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;min-height:100vh;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:56px;
+  border-bottom:1px solid var(--border);
+  background:rgba(10,11,15,0.96);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;}
+.logo-mark{width:26px;height:26px;border-radius:7px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;}
+.nav-links{display:flex;gap:4px;margin-left:20px;}
+.nav-link{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--text2);border:none;background:transparent;cursor:pointer;transition:all .15s;}
+.nav-link:hover,.nav-link.active{color:var(--text);background:var(--surface2);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.net-badge{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;background:transparent;transition:all .15s;}
+.net-badge:hover{border-color:var(--border);color:var(--text);}
+.net-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.net-dot.warn{background:var(--amber);}
+.add-net-btn{padding:5px 10px;border-radius:7px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:var(--amber);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.add-net-btn:hover{background:rgba(245,158,11,.18);}
+.wallet-btn{padding:6px 14px;border-radius:8px;background:var(--blue);border:none;color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;}
+.wallet-btn:hover{opacity:.88;}
+.wallet-btn.connected{background:var(--surface2);border:1px solid var(--border2);color:var(--text);}
+
+.content{max-width:1160px;margin:0 auto;padding:28px 24px 60px;}
+
+.contract-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+.contract-chip{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);}
+.chip-dot{width:5px;height:5px;border-radius:50%;}
+
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;}
+.stat-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.stat-val{font-size:22px;font-weight:600;}
+.stat-val.green{color:var(--green);}
+.stat-val.blue{color:var(--blue);}
+.stat-val.red{color:var(--red);}
+.stat-val.purple{color:var(--purple);}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:4px;width:fit-content;margin-bottom:24px;}
+.tab-btn{padding:7px 18px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{background:var(--surface3);color:var(--text);border:1px solid var(--border);}
+
+.panel{display:none;}
+.panel.active{display:block;}
+.two-col{display:grid;grid-template-columns:380px 1fr;gap:16px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.card-title{font-size:14px;font-weight:600;}
+.card-badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;background:var(--blue-dim);color:var(--blue);}
+.card-badge.green{background:var(--green-dim);color:var(--green);}
+.card-badge.amber{background:var(--amber-dim);color:var(--amber);}
+
+.field{margin-bottom:14px;}
+.field-label{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;}
+.field-label span{font-size:11px;text-transform:none;letter-spacing:0;color:var(--text2);}
+.input-row{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .15s;}
+.input-row:focus-within{border-color:var(--blue);}
+.input-row input{flex:1;padding:10px 12px;background:transparent;border:none;outline:none;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;}
+.input-row input::placeholder{color:var(--text3);}
+.token-select{display:flex;align-items:center;gap:6px;padding:6px 10px 6px 8px;border-left:1px solid var(--border);background:var(--surface3);min-width:96px;}
+.token-select select{background:transparent;border:none;outline:none;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;padding:0;}
+.token-select select option{background:var(--surface2);}
+.token-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+.tk-wopn{background:#4f8ef7;}.tk-opnt{background:#a78bfa;}.tk-tusdt{background:#22c55e;}.tk-tbnb{background:#f59e0b;}
+.max-btn{padding:2px 7px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--blue);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;margin-right:4px;}
+.max-btn:hover{background:var(--blue-dim);}
+
+.divider{height:1px;background:var(--border);margin:14px 0;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-key{font-size:12px;color:var(--text2);}
+.info-val{font-size:12px;font-weight:500;color:var(--text);font-family:'JetBrains Mono',monospace;}
+.info-val.green{color:var(--green);}.info-val.red{color:var(--red);}.info-val.blue{color:var(--blue);}
+
+.ltv-wrap{margin:14px 0;}
+.ltv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.ltv-label{font-size:11px;color:var(--text3);font-weight:500;}
+.ltv-pct{font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.ltv-track{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+.ltv-fill{height:100%;border-radius:3px;background:var(--green);transition:width .3s,background .3s;}
+.ltv-fill.warn{background:var(--amber);}.ltv-fill.danger{background:var(--red);}
+.ltv-marks{display:flex;justify-content:flex-end;margin-top:4px;}
+.ltv-mark{font-size:10px;color:var(--text3);}
+
+.action-btn{width:100%;padding:11px;border-radius:var(--r);border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;margin-top:14px;}
+.action-btn:active{transform:scale(.99);}
+.action-btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover{opacity:.88;}
+.btn-red{background:var(--red);color:#fff;}.btn-red:hover{opacity:.88;}
+
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px;}
+.info-section{margin-bottom:18px;}.info-section:last-child{margin-bottom:0;}
+.section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.step-row{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start;}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--blue-dim);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:12px;color:var(--text2);line-height:1.5;}
+.step-text strong{color:var(--text);font-weight:500;}
+
+.pos-table{width:100%;border-collapse:collapse;}
+.pos-table th{padding:8px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--border);}
+.pos-table td{padding:12px 12px;border-bottom:1px solid var(--border);font-size:13px;}
+.pos-table tr:last-child td{border-bottom:none;}
+.pos-table tr:hover td{background:var(--surface2);}
+.token-chip{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-green{background:var(--green-dim);color:var(--green);}
+.badge-red{background:var(--red-dim);color:var(--red);}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;}
+.empty-icon{font-size:28px;margin-bottom:8px;opacity:.35;}
+
+.abi-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.8;color:var(--text3);overflow-x:auto;}
+.abi-kw{color:var(--blue);}.abi-fn{color:var(--purple);}.abi-const{color:var(--amber);}
+
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:12px 16px;font-size:13px;font-weight:500;color:var(--text);max-width:300px;transform:translateY(120%);transition:transform .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 32px rgba(0,0,0,.4);}
+#toast.show{transform:translateY(0);}
+#toast.ok{border-color:rgba(34,197,94,.3);color:var(--green);}
+#toast.err{border-color:rgba(239,68,68,.3);color:var(--red);}
+#toast.loading{border-color:rgba(79,142,247,.3);color:var(--blue);}
+
+@media(max-width:780px){.two-col{grid-template-columns:1fr;}.stats-strip{grid-template-columns:1fr 1fr;}.nav-links{display:none;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;">
+    <div class="logo"><div class="logo-mark">C</div>CoreBank</div>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="switchTab('deposit')">Markets</button>
+      <button class="nav-link" onclick="switchTab('positions')">Portfolio</button>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="add-net-btn" id="add-network-btn" onclick="addOPNNetwork()">+ Add OPN Network</button>
+    <button class="net-badge" onclick="addOPNNetwork()">
+      <span class="net-dot warn" id="net-dot"></span>
+      <span id="network-label">OPN Testnet</span>
+    </button>
+    <button class="wallet-btn" id="wallet-btn" onclick="connectWallet()">Connect Wallet</button>
+  </div>
+</nav>
+
+<div class="content">
+
+  <div class="contract-strip">
+    <div class="contract-chip"><span class="chip-dot" style="background:#4f8ef7"></span>WOPN &middot; 0xBc02&hellip;BD84</div>
+    <div class="contract-chip"><span class="chip-dot" style="background:#a78bfa"></span>OPNT &middot; 0x2aEc&hellip;B0d</div>
+    <div class="contract-chip"><span class="chip-dot" style="background:#22c55e"></span>tUSDT &middot; 0x3e01&hellip;31b</div>
+    <div class="contract-chip"><span class="chip-dot" style="background:#f59e0b"></span>tBNB &middot; 0x92cF&hellip;607</div>
+    <div class="contract-chip"><span class="chip-dot" id="contract-dot" style="background:#5a5e77"></span>CoreBank &middot; <span id="contract-status">Demo</span></div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat"><div class="stat-label">Total supplied</div><div class="stat-val green" id="stat-deposits">$0.00</div><div class="stat-sub">your deposited amount</div></div>
+    <div class="stat"><div class="stat-label">Total borrowed</div><div class="stat-val red" id="stat-borrows">$350.15</div><div class="stat-sub">active loans</div></div>
+    <div class="stat"><div class="stat-label">Net APY</div><div class="stat-val blue" id="stat-apy">0.50%</div><div class="stat-sub">fixed interest rate</div></div>
+    <div class="stat"><div class="stat-label">Health factor</div><div class="stat-val purple" id="stat-health">2.50</div><div class="stat-sub">collateral safety</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('deposit')">Supply</button>
+    <button class="tab-btn" onclick="switchTab('withdraw')">Withdraw</button>
+    <button class="tab-btn" onclick="switchTab('borrow')">Borrow</button>
+    <button class="tab-btn" onclick="switchTab('repay')">Repay</button>
+    <button class="tab-btn" onclick="switchTab('positions')">Portfolio</button>
+  </div>
+
+  <!-- SUPPLY -->
+  <div class="panel active" id="panel-deposit">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Supply assets</span><span class="card-badge green">0.50% APY</span></div>
+        <div class="field">
+          <div class="field-label">Asset &amp; amount <span id="dep-balance">Balance: &mdash;</span></div>
+          <div class="input-row">
+            <input type="number" id="deposit-amount" placeholder="0.00" min="0" step="any">
+            <button class="max-btn" onclick="setMax('deposit-amount','dep-balance')">MAX</button>
+            <div class="token-select">
+              <div class="token-icon tk-wopn" id="dep-icon">W</div>
+              <select id="deposit-token" onchange="updateIcon('deposit-token','dep-icon','dep-balance')">
+                <option value="WOPN">WOPN</option><option value="OPNT">OPNT</option><option value="tUSDT">tUSDT</option><option value="tBNB">tBNB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-row"><span class="info-key">Supply APY</span><span class="info-val green">0.50%</span></div>
+        <div class="info-row"><span class="info-key">Protocol</span><span class="info-val">CoreBank v1</span></div>
+        <div class="info-row"><span class="info-key">Network</span><span class="info-val blue">OPN Testnet</span></div>
+        <button class="action-btn btn-blue" onclick="handleDeposit()">Approve &amp; Supply</button>
+      </div>
+      <div class="info-card">
+        <div class="info-section">
+          <div class="section-title">How it works</div>
+          <div class="step-row"><div class="step-num">1</div><div class="step-text"><strong>Approve</strong> &mdash; authorize CoreBank to spend your token via IERC20.approve()</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-text"><strong>Supply</strong> &mdash; tokens are transferred to the protocol and your balance is recorded on-chain</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-text"><strong>Earn</strong> &mdash; interest accrues at 0.5% APY and compounds on your next interaction</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-section">
+          <div class="section-title">Market parameters</div>
+          <div class="info-row"><span class="info-key">Max LTV</span><span class="info-val">70%</span></div>
+          <div class="info-row"><span class="info-key">Interest model</span><span class="info-val">Fixed rate</span></div>
+          <div class="info-row"><span class="info-key">Liquidation threshold</span><span class="info-val red">70% LTV</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WITHDRAW -->
+  <div class="panel" id="panel-withdraw">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Withdraw assets</span><span class="card-badge">Deposited balance only</span></div>
+        <div class="field">
+          <div class="field-label">Asset</div>
+          <div class="input-row">
+            <div class="token-select" style="border:none;width:100%;">
+              <div class="token-icon tk-wopn" id="wd-icon">W</div>
+              <select id="withdraw-token" onchange="updateIcon('withdraw-token','wd-icon','wd-avail')" style="flex:1;padding:10px 4px;">
+                <option value="WOPN">WOPN</option><option value="OPNT">OPNT</option><option value="tUSDT">tUSDT</option><option value="tBNB">tBNB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Amount <span id="wd-avail">Balance: &mdash;</span></div>
+          <div class="input-row">
+            <input type="number" id="withdraw-amount" placeholder="0.00" min="0" step="any">
+            <button class="max-btn" onclick="setMax('withdraw-amount','wd-avail')">MAX</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-row"><span class="info-key">Available to withdraw</span><span class="info-val green" id="withdraw-available">0.00</span></div>
+        <div class="info-row"><span class="info-key">Estimated interest</span><span class="info-val green" id="interest-preview">+0.000000</span></div>
+        <button class="action-btn btn-blue" onclick="handleWithdraw()">Withdraw</button>
+      </div>
+      <div class="info-card">
+        <div class="section-title" style="margin-bottom:12px;">Accrued interest</div>
+        <div style="padding:28px 0;text-align:center;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:.8px;text-transform:uppercase;">Estimated earnings</div>
+          <div id="big-interest" style="font-size:36px;font-weight:600;color:var(--green);font-family:'JetBrains Mono',monospace;">+0.00</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;">tokens added on withdrawal</div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-row"><span class="info-key">Annual rate</span><span class="info-val blue">0.50%</span></div>
+        <div class="info-row"><span class="info-key">Compounding</span><span class="info-val">Per block</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BORROW -->
+  <div class="panel" id="panel-borrow">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Borrow assets</span><span class="card-badge amber">Max 70% LTV</span></div>
+        <div class="field">
+          <div class="field-label">Collateral asset &amp; amount</div>
+          <div class="input-row">
+            <input type="number" id="col-amount" placeholder="0.00" min="0" step="any" oninput="calcLTV()">
+            <div class="token-select">
+              <div class="token-icon tk-wopn" id="col-icon">W</div>
+              <select id="col-token" onchange="updateIcon('col-token','col-icon',null);calcLTV()">
+                <option value="WOPN">WOPN</option><option value="OPNT">OPNT</option><option value="tUSDT">tUSDT</option><option value="tBNB">tBNB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Borrow asset &amp; amount</div>
+          <div class="input-row">
+            <input type="number" id="bor-amount" placeholder="0.00" min="0" step="any" oninput="calcLTV()">
+            <div class="token-select">
+              <div class="token-icon tk-tusdt" id="bor-icon">$</div>
+              <select id="bor-token" onchange="updateIcon('bor-token','bor-icon',null);calcLTV()">
+                <option value="tUSDT">tUSDT</option><option value="WOPN">WOPN</option><option value="OPNT">OPNT</option><option value="tBNB">tBNB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="ltv-wrap">
+          <div class="ltv-top"><span class="ltv-label">Loan-to-value ratio</span><span class="ltv-pct" id="ltv-pct">0.0%</span></div>
+          <div class="ltv-track"><div class="ltv-fill" id="ltv-bar" style="width:0%"></div></div>
+          <div class="ltv-marks"><span class="ltv-mark">Limit: 70%</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-row"><span class="info-key">Max borrow</span><span class="info-val" id="max-borrow">0.0000</span></div>
+        <div class="info-row"><span class="info-key">Health factor after</span><span class="info-val green" id="borrow-health">&mdash;</span></div>
+        <button class="action-btn btn-red" onclick="handleBorrow()">Deposit Collateral &amp; Borrow</button>
+      </div>
+      <div class="info-card">
+        <div class="info-section">
+          <div class="section-title">Collateral mechanics</div>
+          <div class="step-row"><div class="step-num">1</div><div class="step-text"><strong>Lock collateral</strong> &mdash; your collateral is held in the contract until repayment</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-text"><strong>70% LTV cap</strong> &mdash; borrow up to 70% of your collateral value</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-text"><strong>Stay healthy</strong> &mdash; keep LTV below 70% to avoid liquidation</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-section">
+          <div class="section-title">Risk parameters</div>
+          <div class="info-row"><span class="info-key">Collateral factor</span><span class="info-val">70%</span></div>
+          <div class="info-row"><span class="info-key">Liquidation threshold</span><span class="info-val red">70% LTV</span></div>
+          <div class="info-row"><span class="info-key">Safe zone</span><span class="info-val green">&lt; 60% LTV</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- REPAY -->
+  <div class="panel" id="panel-repay">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Repay borrowed assets</span><span class="card-badge amber">Unlock collateral</span></div>
+        <div class="field">
+          <div class="field-label">Borrow token (what you owe)</div>
+          <div class="input-row">
+            <div class="token-select" style="border:none;width:100%;">
+              <div class="token-icon tk-tusdt" id="rep-bor-icon">$</div>
+              <select id="repay-bor-token" onchange="updateIcon('repay-bor-token','rep-bor-icon',null);loadRepayInfo()" style="flex:1;padding:10px 4px;">
+                <option value="tUSDT">tUSDT</option><option value="WOPN">WOPN</option><option value="OPNT">OPNT</option><option value="tBNB">tBNB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Collateral token (to unlock)</div>
+          <div class="input-row">
+            <div class="token-select" style="border:none;width:100%;">
+              <div class="token-icon tk-wopn" id="rep-col-icon">W</div>
+              <select id="repay-col-token" onchange="updateIcon('repay-col-token','rep-col-icon',null)" style="flex:1;padding:10px 4px;">
+                <option value="WOPN">WOPN</option><option value="OPNT">OPNT</option><option value="tUSDT">tUSDT</option><option value="tBNB">tBNB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Repay amount <span id="repay-owed-label">Owed: 0.00</span></div>
+          <div class="input-row">
+            <input type="number" id="repay-amount" placeholder="0.00" min="0" step="any">
+            <button class="max-btn" onclick="setMax('repay-amount','repay-owed-label')">MAX</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-row"><span class="info-key">Principal owed</span><span class="info-val red" id="rep-principal">0.0000</span></div>
+        <div class="info-row"><span class="info-key">Borrow interest owed</span><span class="info-val red" id="rep-interest">0.0000</span></div>
+        <div class="info-row"><span class="info-key">Total to repay</span><span class="info-val red" id="rep-total">0.0000</span></div>
+        <div class="info-row"><span class="info-key">Collateral to unlock</span><span class="info-val green" id="rep-collateral">0.0000</span></div>
+        <button class="action-btn btn-blue" onclick="handleRepay()">Approve &amp; Repay</button>
+      </div>
+      <div class="info-card">
+        <div class="info-section">
+          <div class="section-title">How repayment works</div>
+          <div class="step-row"><div class="step-num">1</div><div class="step-text"><strong>Select tokens</strong> &mdash; choose what you borrowed and what you posted as collateral</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-text"><strong>Interest first</strong> &mdash; repayment pays off accrued interest (1.00% APY) before reducing principal</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-text"><strong>Full repayment</strong> &mdash; repay 100% to unlock and receive your collateral back</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-section">
+          <div class="section-title">Rate comparison</div>
+          <div class="info-row"><span class="info-key">Deposit APY (earn)</span><span class="info-val green">0.50%</span></div>
+          <div class="info-row"><span class="info-key">Borrow APY (pay)</span><span class="info-val red">1.00%</span></div>
+          <div class="info-row"><span class="info-key">Spread</span><span class="info-val">0.50%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO -->
+  <div class="panel" id="panel-positions">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><span class="card-title">Your positions</span><span class="card-badge" id="pos-count">Demo data</span></div>
+      <table class="pos-table">
+        <thead><tr><th>Asset</th><th>Supplied</th><th>Borrowed</th><th>Interest earned</th><th>Status</th></tr></thead>
+        <tbody id="positions-list"><tr><td colspan="5"><div class="empty"><div class="empty-icon">&#9675;</div>Connect wallet to view positions</div></td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Contract interface</span><span class="card-badge">ABI reference</span></div>
+      <div class="abi-block">
+        <span class="abi-kw">function</span> <span class="abi-fn">deposit</span>(string _symbol, uint256 _amount) external<br>
+        <span class="abi-kw">function</span> <span class="abi-fn">withdraw</span>(string _symbol, uint256 _amount) external<br>
+        <span class="abi-kw">function</span> <span class="abi-fn">borrow</span>(string colSymbol, uint256 colAmt, string borSymbol, uint256 borAmt) external<br>
+        <span class="abi-kw">function</span> <span class="abi-fn">accounts</span>(address, address) view &rarr; (depositAmount, lastUpdated, borrowedAmount)<br>
+        <span class="abi-kw">function</span> <span class="abi-fn">repay</span>(string _borrowSymbol, uint256 _repayAmount, string _collateralSymbol) external<br>
+        <span class="abi-kw">function</span> <span class="abi-fn">getAccount</span>(address, address) view &rarr; (deposit, collateral, borrowed, pendingDepositInterest, pendingBorrowInterest)<br>
+        <span class="abi-const">DEPOSIT_RATE</span> = 50 &nbsp;<span style="color:var(--text3)">// 0.5% APY</span><br>
+        <span class="abi-const">BORROW_RATE</span> &nbsp;= 100 <span style="color:var(--text3)">// 1.0% APY</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+const TOKENS={WOPN:'0xBc022C9dEb5AF250A526321d16Ef52E39b4DBD84',OPNT:'0x2aEc1Db9197Ff284011A6A1d0752AD03F5782B0d',tUSDT:'0x3e01b4d892E0D0A219eF8BBe7e260a6bc8d9B31b',tBNB:'0x92cF36713a5622351c9489D5556B90B321873607'};
+const COREBANK_ADDRESS='0x1745Dae56802b2E7b8ceeBddE959B6f6bf776711'; // මෙතනට ඔබේ contract address එක දාන්න.
+const OPN_NETWORK={chainId:'0x3d8',chainName:'OPN Testnet',nativeCurrency:{name:'Test OPN',symbol:'OPN',decimals:18},rpcUrls:['https://testnet-rpc.iopn.tech'],blockExplorerUrls:[]};
+const COREBANK_ABI=["function deposit(string _symbol, uint256 _amount) external","function withdraw(string _symbol, uint256 _amount) external","function borrow(string _collateralSymbol, uint256 _collateralAmount, string _borrowSymbol, uint256 _borrowAmount) external","function repay(string _borrowSymbol, uint256 _repayAmount, string _collateralSymbol) external","function getAccount(address _user, address _token) view returns (uint256 depositAmount, uint256 collateralAmount, uint256 borrowedAmount, uint256 pendingDepositInterest, uint256 pendingBorrowInterest)","function DEPOSIT_RATE() view returns (uint256)","function BORROW_RATE() view returns (uint256)"];
+const ERC20_ABI=["function approve(address spender, uint256 amount) returns (bool)","function balanceOf(address) view returns (uint256)","function decimals() view returns (uint8)"];
+const TK={WOPN:{i:'W',c:'tk-wopn'},OPNT:{i:'O',c:'tk-opnt'},tUSDT:{i:'$',c:'tk-tusdt'},tBNB:{i:'B',c:'tk-tbnb'}};
+let provider,signer,userAddress,contract;
+
+async function updateIcon(selId,iconId,balId){
+  const s=document.getElementById(selId).value,m=TK[s],el=document.getElementById(iconId);
+  el.textContent=m.i;el.className='token-icon '+m.c;
+  
+  if(balId){
+    if(signer && userAddress){
+      try {
+        const tc=new ethers.Contract(TOKENS[s],ERC20_ABI,signer);
+        const dec=await tc.decimals();
+        const bal=await tc.balanceOf(userAddress);
+        document.getElementById(balId).textContent='Balance: '+parseFloat(ethers.utils.formatUnits(bal,dec)).toFixed(4);
+      } catch(e) {
+        console.error(e);
+        document.getElementById(balId).textContent='Balance: Error';
+      }
+    } else {
+      document.getElementById(balId).textContent='Balance: \u2014';
+    }
+  }
+}
+
+function setMax(inpId,lblId){
+  const t=document.getElementById(lblId).textContent.replace(/[^0-9.]/g,'');
+  if(t)document.getElementById(inpId).value=t;
+}
+async function addOPNNetwork(){
+  if(!window.ethereum){toast('MetaMask not found',true);return;}
+  try{await window.ethereum.request({method:'wallet_addEthereumChain',params:[OPN_NETWORK]});toast('OPN Testnet added!');}
+  catch(e){toast('Failed: '+(e.message||e),true);}
+}
+async function switchToOPN(){
+  try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:OPN_NETWORK.chainId}]});}
+  catch(e){if(e.code===4902)await addOPNNetwork();else throw e;}
+}
+function updateNetworkLabel(chainId){
+  const ok=parseInt(chainId,16)===984;
+  document.getElementById('net-dot').className='net-dot'+(ok?'':' warn');
+  document.getElementById('network-label').textContent=ok?'OPN Testnet':'Wrong Network';
+  document.getElementById('add-network-btn').style.display=ok?'none':'';
+}
+async function connectWallet(){
+  if(!window.ethereum){toast('MetaMask not found',true);return;}
+  try{
+    const a=await window.ethereum.request({method:'eth_requestAccounts'});
+    userAddress=a[0];
+    await switchToOPN();
+    provider=new ethers.providers.Web3Provider(window.ethereum);
+    signer=provider.getSigner();
+    window.ethereum.on('chainChanged',(id)=>{updateNetworkLabel(id);provider=new ethers.providers.Web3Provider(window.ethereum);signer=provider.getSigner();});
+    const{chainId}=await provider.getNetwork();
+    updateNetworkLabel('0x'+chainId.toString(16));
+    if(COREBANK_ADDRESS!=='0x0000000000000000000000000000000000000000'){
+      contract=new ethers.Contract(COREBANK_ADDRESS,COREBANK_ABI,signer);
+      document.getElementById('contract-dot').style.background='#22c55e';
+      document.getElementById('contract-status').textContent=short(COREBANK_ADDRESS);
+    }
+    const btn=document.getElementById('wallet-btn');btn.textContent=short(userAddress);btn.classList.add('connected');
+    toast('Connected: '+short(userAddress));
+    await loadPositions();
+    await updateIcon('deposit-token','dep-icon','dep-balance');
+    await updateWithdrawBalance();
+  }catch(e){toast('Failed: '+(e.message||e),true);}
+}
+function short(a){return a.slice(0,6)+'\u2026'+a.slice(-4);}
+function switchTab(name){
+  const tabs=['deposit','withdraw','borrow','repay','positions'];
+  document.querySelectorAll('.tab-btn').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach((l,i)=>l.classList.toggle('active',i===(name==='positions'||name==='repay'?1:0)));
+  if(name==='positions')loadPositions();if(name==='repay')loadRepayInfo();if(name==='withdraw')updateWithdrawBalance();
+}
+async function handleDeposit(){
+  const sym=document.getElementById('deposit-token').value,amt=document.getElementById('deposit-amount').value;
+  if(!amt||+amt<=0){toast('Enter a valid amount',true);return;}
+  if(!signer){toast('Connect wallet first',true);return;}
+  try{
+    const tc=new ethers.Contract(TOKENS[sym],ERC20_ABI,signer),dec=await tc.decimals(),amount=ethers.utils.parseUnits(amt,dec);
+    toast('Approving\u2026',false,'loading');const at=await tc.approve(COREBANK_ADDRESS,amount);await at.wait();
+    toast('Supplying\u2026',false,'loading');const tx=await contract.deposit(sym,amount);await tx.wait();
+    toast('Supplied '+amt+' '+sym+'!');document.getElementById('deposit-amount').value='';await loadPositions();
+    await updateIcon('deposit-token','dep-icon','dep-balance');
+  }catch(e){toast(parseError(e),true);}
+}
+async function handleWithdraw(){
+  const sym=document.getElementById('withdraw-token').value,amt=document.getElementById('withdraw-amount').value;
+  if(!amt||+amt<=0){toast('Enter a valid amount',true);return;}
+  if(!signer){toast('Connect wallet first',true);return;}
+  try{
+    const tc=new ethers.Contract(TOKENS[sym],ERC20_ABI,signer),dec=await tc.decimals(),amount=ethers.utils.parseUnits(amt,dec);
+    toast('Withdrawing\u2026',false,'loading');const tx=await contract.withdraw(sym,amount);await tx.wait();
+    toast('Withdrew '+amt+' '+sym+'!');document.getElementById('withdraw-amount').value='';await loadPositions();
+    await updateWithdrawBalance();
+  }catch(e){toast(parseError(e),true);}
+}
+async function handleBorrow(){
+  const cs=document.getElementById('col-token').value,bs=document.getElementById('bor-token').value;
+  const ca=document.getElementById('col-amount').value,ba=document.getElementById('bor-amount').value;
+  if(!ca||!ba||+ca<=0||+ba<=0){toast('Fill in all fields',true);return;}
+  if(cs===bs){toast('Collateral and borrow must differ',true);return;}
+  if(!signer){toast('Connect wallet first',true);return;}
+  if((+ba/+ca)*100>70){toast('LTV exceeds 70% limit',true);return;}
+  try{
+    const ct=new ethers.Contract(TOKENS[cs],ERC20_ABI,signer),cd=await ct.decimals();
+    const bt=new ethers.Contract(TOKENS[bs],ERC20_ABI,signer),bd=await bt.decimals();
+    const cA=ethers.utils.parseUnits(ca,cd),bA=ethers.utils.parseUnits(ba,bd);
+    toast('Approving collateral\u2026',false,'loading');const at=await ct.approve(COREBANK_ADDRESS,cA);await at.wait();
+    toast('Borrowing\u2026',false,'loading');const tx=await contract.borrow(cs,cA,bs,bA);await tx.wait();
+    toast('Borrowed '+ba+' '+bs+'!');
+    document.getElementById('col-amount').value='';document.getElementById('bor-amount').value='';
+    calcLTV();await loadPositions();
+  }catch(e){toast(parseError(e),true);}
+}
+function calcLTV(){
+  const col=parseFloat(document.getElementById('col-amount').value)||0;
+  const bor=parseFloat(document.getElementById('bor-amount').value)||0;
+  const pct=col>0?Math.min((bor/col)*100,100):0;
+  document.getElementById('ltv-pct').textContent=pct.toFixed(1)+'%';
+  const bar=document.getElementById('ltv-bar');
+  bar.style.width=pct+'%';
+  bar.className='ltv-fill'+(pct>70?' danger':pct>60?' warn':'');
+  document.getElementById('max-borrow').textContent=(col*0.7).toFixed(4);
+  const hf=bor>0?(col*0.7/bor).toFixed(2):'\u2014';
+  const hEl=document.getElementById('borrow-health');
+  hEl.textContent=hf;
+  hEl.className='info-val'+(hf!=='\u2014'?(+hf>=1.5?' green':+hf>=1?' blue':' red'):'');
+}
+async function loadPositions(){
+  const list=document.getElementById('positions-list');
+  if(!signer||!contract||COREBANK_ADDRESS==='0x0000000000000000000000000000000000000000'){renderDemoPositions(list);return;}
+  list.innerHTML='<tr><td colspan="5"><div class="empty">Loading\u2026</div></td></tr>';
+  let td=0,tb=0,rows='';
+  for(const[sym,addr]of Object.entries(TOKENS)){
+    try{
+      const acc=await contract.accounts(userAddress,addr);
+      const tc=new ethers.Contract(addr,ERC20_ABI,provider);
+      const dec=await tc.decimals();
+      const dep=parseFloat(ethers.utils.formatUnits(acc.depositAmount,dec));
+      const bor=parseFloat(ethers.utils.formatUnits(acc.borrowedAmount,dec));
+      let interest=0;
+      if(dep>0&&acc.lastUpdated.gt(0)){const now=Math.floor(Date.now()/1000);interest=dep*50*(now-acc.lastUpdated.toNumber())/(365*24*3600*10000);}
+      if(dep>0||bor>0){td+=dep;tb+=bor;rows+=buildRow(sym,dep,bor,interest);}
+    }catch{}
+  }
+  list.innerHTML=rows||'<tr><td colspan="5"><div class="empty"><div class="empty-icon">&#9675;</div>No positions found</div></td></tr>';
+  document.getElementById('stat-deposits').textContent='$'+td.toFixed(2);
+  document.getElementById('stat-borrows').textContent='$'+tb.toFixed(2);
+  if(tb>0&&td>0){const hf=(td*0.7/tb).toFixed(2);document.getElementById('stat-health').textContent=hf;document.getElementById('stat-health').className='stat-val'+(+hf>=1.5?' purple':' red');}
+}
+function renderDemoPositions(list){
+  const demo=[{s:'WOPN',d:1250.50,b:0,i:0.17},{s:'tUSDT',d:500.00,b:350.00,i:0.07},{s:'tBNB',d:0,b:0.15,i:0}];
+  let rows='',td=0,tb=0;
+  demo.forEach(x=>{if(x.d>0||x.b>0){rows+=buildRow(x.s,x.d,x.b,x.i);td+=x.d;tb+=x.b;}});
+  list.innerHTML=rows;
+  document.getElementById('stat-deposits').textContent='$'+td.toFixed(2);
+  document.getElementById('stat-borrows').textContent='$'+tb.toFixed(2);
+  document.getElementById('stat-health').textContent=(td>0&&tb>0?(td*0.7/tb).toFixed(2):'\u2014');
+  document.getElementById('pos-count').textContent='Demo data';
+}
+function buildRow(sym,dep,bor,interest){
+  const m=TK[sym];
+  const st=bor>0?'<span class="badge badge-red">Borrowed</span>':'<span class="badge badge-green">Supplied</span>';
+  return`<tr>
+    <td><div class="token-chip"><div class="token-icon ${m.c}" style="width:22px;height:22px;font-size:9px;">${m.i}</div>${sym}</div></td>
+    <td class="mono">${dep>0?dep.toFixed(4):'\u2014'}</td>
+    <td class="mono">${bor>0?'<span style="color:var(--red)">'+bor.toFixed(4)+'</span>':'\u2014'}</td>
+    <td class="mono" style="color:var(--green)">+${interest.toFixed(6)}</td>
+    <td>${st}</td>
+  </tr>`;
+}
+
+async function updateWithdrawBalance(){
+  const sym=document.getElementById('withdraw-token').value;
+  if(!signer||!contract)return;
+
+  try{
+    const acc=await contract.accounts(userAddress,TOKENS[sym]);
+    const tc=new ethers.Contract(TOKENS[sym],ERC20_ABI,provider);
+    const dec=await tc.decimals();
+    const deposited=parseFloat(ethers.utils.formatUnits(acc.depositAmount,dec));
+
+    document.getElementById('wd-avail').textContent='Deposited: '+deposited.toFixed(4);
+    document.getElementById('withdraw-available').textContent=deposited.toFixed(4)+' '+sym;
+
+    let interest=0;
+    if(deposited>0&&acc.lastUpdated.gt(0)){
+      const now=Math.floor(Date.now()/1000);
+      interest=deposited*50*(now-acc.lastUpdated.toNumber())/(365*24*3600*10000);
+    }
+
+    document.getElementById('interest-preview').textContent='+'+interest.toFixed(6);
+    document.getElementById('big-interest').textContent='+'+interest.toFixed(6);
+  }catch(e){
+    console.error(e);
+  }
+}
+function toast(msg,isError=false,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='show'+(isError?' err':type?' '+type:' ok');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>{el.className='';},3500);
+}
+
+async function loadRepayInfo(){
+  const borSym=document.getElementById('repay-bor-token').value;
+  if(!signer||!contract||COREBANK_ADDRESS==='0x0000000000000000000000000000000000000000') return;
+  try{
+    const acc=await contract.getAccount(userAddress,TOKENS[borSym]);
+    const tc=new ethers.Contract(TOKENS[borSym],ERC20_ABI,provider);
+    const dec=await tc.decimals();
+    const principal=parseFloat(ethers.utils.formatUnits(acc.borrowedAmount,dec));
+    const interest=parseFloat(ethers.utils.formatUnits(acc.pendingBorrowInterest,dec));
+    const total=principal+interest;
+    const colSym=document.getElementById('repay-col-token').value;
+    const colAcc=await contract.getAccount(userAddress,TOKENS[colSym]);
+    const colTc=new ethers.Contract(TOKENS[colSym],ERC20_ABI,provider);
+    const colDec=await colTc.decimals();
+    const collateral=parseFloat(ethers.utils.formatUnits(colAcc.collateralAmount,colDec));
+    document.getElementById('rep-principal').textContent=principal.toFixed(4);
+    document.getElementById('rep-interest').textContent=interest.toFixed(6);
+    document.getElementById('rep-total').textContent=total.toFixed(4);
+    document.getElementById('rep-collateral').textContent=collateral.toFixed(4);
+    document.getElementById('repay-owed-label').textContent='Owed: '+total.toFixed(4);
+  }catch(e){console.error(e);}
+}
+async function handleRepay(){
+  const borSym=document.getElementById('repay-bor-token').value;
+  const colSym=document.getElementById('repay-col-token').value;
+  const amt=document.getElementById('repay-amount').value;
+  if(!amt||+amt<=0){toast('Enter a valid amount',true);return;}
+  if(!signer){toast('Connect wallet first',true);return;}
+  try{
+    const tc=new ethers.Contract(TOKENS[borSym],ERC20_ABI,signer),dec=await tc.decimals();
+    const amount=ethers.utils.parseUnits(amt,dec);
+    toast('Approving\u2026',false,'loading');const at=await tc.approve(COREBANK_ADDRESS,amount);await at.wait();
+    toast('Repaying\u2026',false,'loading');const tx=await contract.repay(borSym,amount,colSym);await tx.wait();
+    toast('Repaid '+amt+' '+borSym+'!');
+    document.getElementById('repay-amount').value='';
+    await loadRepayInfo();await loadPositions();
+  }catch(e){toast(parseError(e),true);}
+}
+function parseError(e){
+  if(e.reason)return e.reason;
+  if(e.message&&e.message.includes('user rejected'))return 'Transaction rejected';
+  return(e.message||'Transaction failed').slice(0,80);
+}
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js';
+  s.onload=()=>{if(window.ethereum)window.ethereum.request({method:'eth_accounts'}).then(a=>{if(a.length)connectWallet();});};
+  document.head.appendChild(s);
+})();
+renderDemoPositions(document.getElementById('positions-list'));
+</script>
+</body>
+</html>
